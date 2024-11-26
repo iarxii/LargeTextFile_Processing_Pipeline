@@ -1,4 +1,9 @@
+# folder content
+/output
 /converted_csv
 /input_conversion_data
+/sql_files
 
+# files
 .txt
+.csv
