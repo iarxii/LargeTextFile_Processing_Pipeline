@@ -116,7 +116,7 @@ for csv_file in "$csv_dir"/*.csv; do
             # Sanitize and format values
             values=$(echo "$line" | awk -v FS="," '{
                 for (i=1; i<=NF; i++) {
-                    gsub(/\047/, "");              # Remove single quotes
+                    gsub(/'"'"'|"/, "");  # Remove both single and double quotes
                     printf "\047%s\047%s", $i, (i==NF ? "" : ",")  # Wrap in single quotes
                 }
             }')
