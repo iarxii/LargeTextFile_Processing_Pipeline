@@ -43,7 +43,7 @@ This script automates the process of handling large pipe-delimited text files. I
 #### Basic Usage
 
 ```bash
-./process_pipeline.sh large_file.txt batch_2024
+./lgtxtdata_processing_pipeline.sh large_file.txt batch_2024
 ```
 
 - **Input File**: `large_file.txt`
@@ -52,7 +52,7 @@ This script automates the process of handling large pipe-delimited text files. I
 #### Custom Options
 
 ```bash
-./process_pipeline.sh large_file.txt batch_2024 --lines=5000 --delimiter="|" --encoding="ISO-8859-1"
+./lgtxtdata_processing_pipeline.sh large_file.txt batch_2024 --lines=5000 --delimiter="|" --encoding="ISO-8859-1"
 ```
 
 ## Output Structure
