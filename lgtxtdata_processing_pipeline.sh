@@ -109,7 +109,11 @@ for csv_file in "$csv_dir"/*.csv; do
         echo "-- Processing $csv_file..." >> "$output_sql"
         
         # Read and generate INSERT statements
+        buffer="INSERT INTO [$table_name] VALUES"
+        buffer_counter=0
         row_count=0
+        batch_size=500  # Adjust for optimal performance
+
         tail -n +2 "$csv_file" | while IFS= read -r line; do
             row_count=$((row_count + 1))
 
@@ -121,14 +125,37 @@ for csv_file in "$csv_dir"/*.csv; do
                 }
             }')
 
-            # Construct the INSERT statement
-            echo "INSERT INTO [$table_name] VALUES ($values);" >> "$output_sql"
+            if [ $buffer_counter -eq 0 ]; then
+                buffer="$buffer ($values)"
+            else
+                buffer="$buffer, ($values)"
+            fi
+
+            buffer_counter=$((buffer_counter + 1))
+
+            # Construct the INSERT statement # deprecate this code block
+            # echo "INSERT INTO [$table_name] VALUES ($values);" >> "$output_sql"
+
+            if [ $buffer_counter -ge $batch_size ]; then
+                echo "$buffer;" >> "$output_sql"
+                buffer="INSERT INTO [$table_name] VALUES"
+                buffer_counter=0
+            fi
 
             # Output progress for every 1000 rows
             if (( row_count % 1000 == 0 )); then
                 echo "  ✅ Processed $row_count rows in $csv_file"
             fi
         done
+
+        # Write remaining rows if any
+        if [ $buffer_counter -gt 0 ]; then
+            echo "$buffer;" >> "$output_sql"
+        fi
+
+        echo "Finished processing $csv_file. Total rows: $row_count"
+    else
+        echo "Warning: No valid CSV files found in $csv_dir or $csv_file is not a file."
     fi
 done
 
