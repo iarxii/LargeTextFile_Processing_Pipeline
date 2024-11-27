@@ -1,4 +1,4 @@
-# Process Pipeline Script
+# Large Text File (LTF) Processing Pipeline Script
 
 This script automates the process of handling large pipe-delimited text files. It splits the input file into smaller chunks, converts the chunks into CSV format, and generates SQL scripts for database insertion.
 
@@ -7,11 +7,11 @@ This script automates the process of handling large pipe-delimited text files. I
 1. **Splitting Large Files**:
    - Splits the input text file into smaller files with a configurable number of lines.
 2. **CSV Conversion**:
-   - Converts split files from pipe-delimited format to CSV with proper encoding and delimiter replacement.
+   - Converts split files from pipe-delimited format to CSV with proper encoding and delimiter replacement. PS: Specify `--delimiter=,` argument if the file you are working with is comma-delimited.
 3. **SQL Script Generation**:
-   - Creates SQL `INSERT` statements for each CSV row, ensuring proper formatting.
+   - Creates SQL `INSERT` statements for a buffer range of 1000 by combining each CSV row insert values into a single statement per 1000 csv file iterations whilst ensuring proper formatting.
 4. **Customizable Options**:
-   - Allows you to specify sub-folder names, delimiters, encoding, and number of lines per split.
+   - Allows you to specify sub-folder names, delimiters, encoding, and number of lines per split if they are different from the scripts default configuration.
 
 ## Requirements
 
@@ -24,10 +24,12 @@ This script automates the process of handling large pipe-delimited text files. I
 
 ## Usage
 
+(Optional) You can opt to create an "input" folder and add the raw text file(s) in it instead of placing the files in the project root. On the command below, you may use the relative path (./input/<text_file>) if you choose do do so.
+
 ### Basic Command
 
 ```bash
-./process_pipeline.sh <text_file> <sub_folder> [options]
+./lgtxtdata_processing_pipeline.sh <text_file> <sub_folder> [options]
 ```
 
 ### Options
@@ -80,7 +82,7 @@ output/
 
 ## Generated SQL Format
 
-Each row in the CSV is converted into an SQL `INSERT` statement:
+Each row in the CSV is converted into an SQL `INSERT` statement (example):
 
 ```sql
 INSERT INTO [Outpatient_Visit_Data] VALUES ('00000000','78530000','NYATHI THUSILE','EYEG','ST JOHNS RETINAL CLINIC','13/06/2022 10:54:50');

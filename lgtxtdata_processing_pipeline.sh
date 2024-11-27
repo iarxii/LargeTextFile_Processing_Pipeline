@@ -94,6 +94,38 @@ done
 table_name="${base_name}" # database table name must be the same as the file name
 output_sql="${sql_dir}/${base_name}.sql"
 
+# Initialize SQL script
+echo "Initializing SQL script..." 
+echo "-- SQL Script to Create Database and Insert Data" > "$output_sql"
+echo "IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = '$database_name')" >> "$output_sql"
+echo "BEGIN" >> "$output_sql"
+echo "    CREATE DATABASE [$database_name];" >> "$output_sql"
+echo "END;" >> "$output_sql"
+echo "GO" >> "$output_sql"
+echo "USE [$database_name];" >> "$output_sql"
+
+# Extract header from the first CSV file to create the table structure
+echo "Extracting table structure from the first CSV file..."
+first_file=$(find "$input_dir" -name "*.csv" | head -n 1)
+if [[ -z "$first_file" ]]; then
+    echo "No CSV files found in $input_dir. Exiting."
+    exit 1
+fi
+
+header=$(head -n 1 "$first_file")
+columns=()
+for col in $(echo "$header" | tr "$delimiter" "\n"); do
+    sanitized_col=$(echo "$col" | sed 's/[^a-zA-Z0-9_]/_/g')  # Sanitize column names
+    columns+=("[$sanitized_col] NVARCHAR(MAX)")
+done
+
+echo "Creating table structure in SQL script..."
+echo "IF OBJECT_ID('$table_name', 'U') IS NOT NULL DROP TABLE [$table_name];" >> "$output_sql"
+echo "CREATE TABLE [$table_name] (" >> "$output_sql"
+echo "    $(IFS=,; echo "${columns[*]}")" >> "$output_sql"
+echo ");" >> "$output_sql"
+echo "GO" >> "$output_sql"
+
 # Count files for progress tracking
 total_csv_files=$(find "$csv_dir" -name "*.csv" | wc -l)
 file_count=0
@@ -121,7 +153,11 @@ for csv_file in "$csv_dir"/*.csv; do
             values=$(echo "$line" | awk -v FS="," '{
                 for (i=1; i<=NF; i++) {
                     gsub(/'"'"'|"/, "");  # Remove both single and double quotes
-                    printf "\047%s\047%s", $i, (i==NF ? "" : ",")  # Wrap in single quotes
+                    if ($i == "") {
+                        printf "NULL%s", (i==NF ? "" : ",") # Replace blank with NULL
+                    } else {
+                        printf "\047%s\047%s", $i, (i==NF ? "" : ",")  # Wrap non-blank values in single quotes
+                    }
                 }
             }')
 
@@ -144,7 +180,7 @@ for csv_file in "$csv_dir"/*.csv; do
 
             # Output progress for every 1000 rows
             if (( row_count % 1000 == 0 )); then
-                echo "  ✅ Processed $row_count rows in $csv_file"
+                echo " ✅ Processed $row_count rows in $csv_file"
             fi
         done
 
@@ -158,6 +194,14 @@ for csv_file in "$csv_dir"/*.csv; do
         echo "Warning: No valid CSV files found in $csv_dir or $csv_file is not a file."
     fi
 done
+
+# Total files processed
+echo "Total files processed: $processed_files of $total_csv_files"
+
+# Finalize script
+echo "Finalizing SQL script..."
+echo "GO" >> "$output_sql"
+echo "SQL script generated: $output_sql"
 
 # Track end time and calculate elapsed time
 end_time=$(date +%s)
