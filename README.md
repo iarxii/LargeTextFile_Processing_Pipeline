@@ -105,7 +105,3 @@ The script displays:
 ## Contribution
 
 Feel free to fork and contribute improvements to this script.
-
----
-
-Let me know if you need further adjustments!
